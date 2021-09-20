@@ -1,7 +1,8 @@
 package SDL2::Utils {
 
     # FFI utilities
-    use strictures 2;
+    use strict;
+    use warnings;
     use experimental 'signatures';
     use base 'Exporter::Tiny';
     our @EXPORT = qw[attach define deprecate has enum ffi is threads_wrapped];
@@ -57,45 +58,27 @@ package SDL2::Utils {
                 warn $@ if $@;
                 eval { Test2::V0::diag( 'cflags: ' . $cflags ) };
                 warn $@ if $@;
-            }
-            my $lib = undef;
-            if (1) {
-
-                #my $dir;    # eval { dist_dir('SDL2-FFI') };
-                #$dir //= $root->child('share')->realpath;
-                my $c = $root->child('ffi/bundle.c');
-                if ( defined(&Test2::V0::diag) ) {
-                    eval { Test2::V0::diag( 'c file: ' . $c . ' | ' . ( -f $c ? '1' : '0' ) ) };
-                }
-                my $build = FFI::Build->new(
-                    'bundle',
-                    dir     => $distdir,
-                    source  => [$c],
-                    libs    => $lflags,
-                    cflags  => $cflags,
-                    verbose => 2
+                require Data::Dump;
+                Data::Dump::ddx(
+                    \{  api          => 2,
+                        experimental => 2,
+                        lib          => [
+                            map { $_->stringify }
+                                $distdir->child('lib')->children(qr/\.(dylib|so|dll|a)\z/),
+                            $distdir->child('bin')->children(qr/\.(dylib|so|dll|a)\z/)
+                        ]
+                    }
                 );
-                $lib
-                    = ( ( !-f $build->file->path ) ||
-                        ( ( [ stat $build->file->path ]->[9] < [ stat $c ]->[9] ) ) ) ?
-                    $build->build :
-                    $build->file->path;
-
-                #$lib
-                #    = -f $build->file->path && -f $root->child('ffi/sdl2.c') &&
-                #    [ stat $build->file->path ]->[9]
-                #    >= [ stat( $root->child('ffi/sdl2.c') ) ]->[9] ? $build->file : $build->build;
-                #    warn $lib;
-                $thread_safe = defined $lib ? $lib : ();
-                if ( defined(&Test2::V0::diag) ) {
-                    eval { Test2::V0::diag( 'lib: ' . $lib . ' | ' . ( -f $lib ? '1' : '0' ) ); };
-                }
             }
             {
                 $ffi = FFI::Platypus->new(
                     api          => 2,
                     experimental => 2,
-                    lib => [ $distdir->child('lib')->children(qr/\.(dynlib|so|dll)\z/), $lib ]
+                    lib          => [
+                        map { $_->stringify }
+                            $distdir->child('lib')->children(qr/\.(dylib|so|dll)\z/),
+                        $distdir->child('bin')->children(qr/\.(dylib|so|dll|a)\z/)
+                    ]
                 );
                 FFI::C->ffi($ffi);
             }

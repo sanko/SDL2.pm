@@ -35,9 +35,6 @@ jobs:
     #- name: Install libsdl2
     #  if: ${{ startsWith( matrix.runner, 'ubuntu-' )  }}
     #  run: sudo apt-get install libsdl2-dev
-    - name: Install unexpected Win32 dependencies
-      run: |
-          cpanm -v -n --mirror http://cpan.cpantesters.org/ App::dumpbin
 
     - name: Install dependencies
       run: |
